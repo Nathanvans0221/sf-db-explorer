@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Explorer — Silver Fern Legacy Database Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f1117;
+            color: #e1e4e8;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+        /* Header */
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+            border-bottom: 1px solid #21262d;
+            margin-bottom: 48px;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #238636 0%, #1a7f37 100%);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #f0f3f6;
+            margin-bottom: 12px;
+        }
+        .hero h1 span { color: #58a6ff; }
+        .hero p {
+            font-size: 18px;
+            color: #8b949e;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Section */
+        .section { margin-bottom: 48px; }
+        .section h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #f0f3f6;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 .icon { font-size: 22px; }
+        .section .subtitle {
+            color: #8b949e;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .card {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: #388bfd44; }
+        .card h3 {
+            font-size: 16px;
+            color: #f0f3f6;
+            margin-bottom: 8px;
+        }
+        .card p {
+            font-size: 14px;
+            color: #8b949e;
+        }
+        .card .tag {
+            display: inline-block;
+            background: #1f6feb22;
+            color: #58a6ff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        /* Database diagram */
+        .db-map {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 28px;
+            overflow-x: auto;
+        }
+        .db-map table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .db-map th {
+            text-align: left;
+            color: #58a6ff;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 1px solid #21262d;
+            white-space: nowrap;
+        }
+        .db-map td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #21262d22;
+            color: #c9d1d9;
+        }
+        .db-map tr:last-child td { border-bottom: none; }
+        .db-name { color: #7ee787; font-weight: 600; font-family: 'Consolas', 'Monaco', monospace; }
+
+        /* Permission tiers */
+        .tier {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border-left: 4px solid;
+        }
+        .tier.explorer { border-left-color: #238636; }
+        .tier.editor { border-left-color: #d29922; }
+        .tier.admin { border-left-color: #f85149; }
+        .tier h3 { font-size: 16px; color: #f0f3f6; margin-bottom: 6px; }
+        .tier .tier-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .tier.explorer .tier-label { color: #238636; }
+        .tier.editor .tier-label { color: #d29922; }
+        .tier.admin .tier-label { color: #f85149; }
+        .tier p { font-size: 14px; color: #8b949e; }
+        .tier ul { margin-top: 8px; padding-left: 20px; }
+        .tier li { font-size: 14px; color: #8b949e; margin-bottom: 4px; }
+
+        /* Example conversations */
+        .convo {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .convo .user-msg, .convo .ai-msg {
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            max-width: 85%;
+        }
+        .convo .user-msg {
+            background: #1f6feb33;
+            color: #c9d1d9;
+            margin-left: auto;
+            text-align: right;
+        }
+        .convo .ai-msg {
+            background: #21262d;
+            color: #c9d1d9;
+        }
+        .convo .label {
+            font-size: 11px;
+            color: #8b949e;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .convo .label.right { text-align: right; }
+
+        /* Copy prompt section */
+        .prompt-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 32px;
+            position: relative;
+        }
+        .prompt-section h3 {
+            font-size: 18px;
+            color: #f0f3f6;
+            margin-bottom: 16px;
+        }
+        .prompt-steps {
+            margin-bottom: 24px;
+        }
+        .prompt-steps .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: #1f6feb;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-text { font-size: 14px; color: #c9d1d9; }
+        .step-text code {
+            background: #1f6feb22;
+            color: #58a6ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        .copy-block {
+            position: relative;
+            background: #0d1117;
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .copy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #21262d;
+            background: #161b22;
+            border-radius: 8px 8px 0 0;
+        }
+        .copy-header span {
+            font-size: 12px;
+            color: #8b949e;
+            font-weight: 600;
+        }
+        .copy-btn {
+            background: #238636;
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: #2ea043; }
+        .copy-btn.copied { background: #1f6feb; }
+        .copy-content {
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: #c9d1d9;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* FAQ */
+        .faq-item {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .faq-q {
+            padding: 16px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #f0f3f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faq-q:hover { background: #21262d44; }
+        .faq-q .arrow { color: #8b949e; transition: transform 0.2s; }
+        .faq-a {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            font-size: 14px;
+            color: #8b949e;
+        }
+        .faq-item.open .faq-a {
+            padding: 0 20px 16px;
+            max-height: 200px;
+        }
+        .faq-item.open .arrow { transform: rotate(90deg); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            border-top: 1px solid #21262d;
+            margin-top: 48px;
+            color: #484f58;
+            font-size: 13px;
+        }
+        .footer a { color: #58a6ff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-badge">Silver Fern Internal Tool</div>
+        <h1><span>/db-explorer</span></h1>
+        <p>A Claude Code skill that lets anyone at Silver Fern query our legacy customer databases using plain English. No SQL knowledge required.</p>
+    </div>
+
+    <!-- What It Does -->
+    <div class="section">
+        <h2><span class="icon">&#9889;</span> What It Does</h2>
+        <p class="subtitle">Connect to any Silver Fern customer database and explore data conversationally</p>
+        <div class="card-grid">
+            <div class="card">
+                <h3>Plain English Queries</h3>
+                <p>Ask "how many customers do we have?" or "what's scheduled for next week?" — Claude translates to SQL and shows clean results.</p>
+                <span class="tag">No SQL needed</span>
+            </div>
+            <div class="card">
+                <h3>All Legacy Databases</h3>
+                <p>Works with PRODUCE (greenhouse planning), RESTOCK (retail replenishment), and ANALYZE (sales analytics) across any customer server.</p>
+                <span class="tag">Produce &middot; Restock &middot; Analyze</span>
+            </div>
+            <div class="card">
+                <h3>Safe Edit Workflow</h3>
+                <p>Need to fix data? Escalate to Editor mode with preview-before-execute and mandatory confirmation. Major changes route to Nathan for approval via Teams.</p>
+                <span class="tag">Built-in guardrails</span>
+            </div>
+            <div class="card">
+                <h3>Report Exploration</h3>
+                <p>Decode DevExpress report XML, trace combo lot structures, and explore the full data model behind any report built into the system.</p>
+                <span class="tag">Deep inspection</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Coverage -->
+    <div class="section">
+        <h2><span class="icon">&#128451;</span> Database Coverage</h2>
+        <p class="subtitle">What's inside each database</p>
+        <div class="db-map">
+            <table>
+                <tr>
+                    <th>Database</th>
+                    <th>Purpose</th>
+                    <th>Key Data</th>
+                </tr>
+                <tr>
+                    <td><span class="db-name">Produce</span></td>
+                    <td>Greenhouse production planning</td>
+                    <td>Customers, plant catalogs (genus/series/color), grow recipes, schedules, lots, material &amp; space events, purchase orders, physical counts</td>
+                </tr>
+                <tr>
+                    <td><span class="db-name">Restock</span></td>
+                    <td>Retail replenishment / DBR</td>
+                    <td>Store locations (customer/site/region/state), sales data, product items, delivery schedules, price groups, replenishment orders</td>
+                </tr>
+                <tr>
+                    <td><span class="db-name">Analyze</span></td>
+                    <td>Sales analytics &amp; reporting</td>
+                    <td>Daily sales summaries (Walmart, HD, Lowes, Kroger), retailer hierarchy, item costs, market/region aggregations</td>
+                </tr>
+                <tr>
+                    <td><span class="db-name">MobileApp</span></td>
+                    <td>Count app &amp; availability</td>
+                    <td>Physical counts, devices, product availability, grower/house listings</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Permission Tiers -->
+    <div class="section">
+        <h2><span class="icon">&#128274;</span> Permission Tiers</h2>
+        <p class="subtitle">Three levels of access with safety guardrails at every level</p>
+
+        <div class="tier explorer">
+            <div class="tier-label">Explorer (Default)</div>
+            <h3>Read-Only Browsing</h3>
+            <p>Browse, search, count, and report on anything. No risk of changing data.</p>
+            <ul>
+                <li>SELECT queries across all databases and tables</li>
+                <li>Automatic TOP 50 limits to prevent overwhelming results</li>
+                <li>Clean markdown tables, formatted dates, and commas on numbers</li>
+            </ul>
+        </div>
+
+        <div class="tier editor">
+            <div class="tier-label">Editor (Type "elevate")</div>
+            <h3>Supervised Data Changes</h3>
+            <p>UPDATE and INSERT on approved tables. Every change goes through a preview &rarr; confirm flow.</p>
+            <ul>
+                <li>Must type "I understand" to enable</li>
+                <li>Always previews affected rows before executing</li>
+                <li>Major changes (5+ rows, sensitive tables) require Nathan's Teams approval</li>
+                <li>Type "read-only" to drop back anytime</li>
+            </ul>
+        </div>
+
+        <div class="tier admin">
+            <div class="tier-label">Admin (Nathan Only)</div>
+            <h3>Full Write Access</h3>
+            <p>Adds DELETE capability. Same preview &rarr; confirm flow, but no approval routing needed.</p>
+            <ul>
+                <li>Single-row DELETE with WHERE clause only</li>
+                <li>Extra confirmation required for 5+ row deletions</li>
+                <li>DROP, ALTER, TRUNCATE are still blocked for everyone</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Example Conversations -->
+    <div class="section">
+        <h2><span class="icon">&#128172;</span> Example Conversations</h2>
+        <p class="subtitle">How it looks in practice</p>
+
+        <div class="convo">
+            <div class="label right">You</div>
+            <div class="user-msg">What customers are in the CMG database?</div>
+            <div class="label">Claude</div>
+            <div class="ai-msg">Let me check the customer list in the Produce database...<br><br>Found 23 customers. Here are the first 10:<br><br>| ID | Customer |<br>|----|----------|<br>| 1 | Sams Club |<br>| 2 | Giant Eagle |<br>| 3 | Safeway |<br>| ... | ... |<br><br>Want to see all 23, or filter by something specific?</div>
+        </div>
+
+        <div class="convo">
+            <div class="label right">You</div>
+            <div class="user-msg">What mum combos are scheduled for week 36?</div>
+            <div class="label">Claude</div>
+            <div class="ai-msg">Checking combo lots where Series='mum' finishing in week 36...<br><br>Found 3 combo lots:<br><br>| Lot | Combo | Components | Customer | Qty |<br>|-----|-------|------------|----------|-----|<br>| 8978 | Beverly Tricolor | Dark Bronze + Gold + Orange | Sams Club | 2,628 |<br>| ... | ... | ... | ... | ... |<br><br>Each combo has 3 mum cuttings per pot (PlantsPerPot=3). Want me to break down the grow schedule?</div>
+        </div>
+
+        <div class="convo">
+            <div class="label right">You</div>
+            <div class="user-msg">I need to update the customer name from "Aldi-17" to "Aldi South Region 17"</div>
+            <div class="label">Claude</div>
+            <div class="ai-msg">You're in Explorer mode (read-only). Type <b>elevate</b> to request edit access, then I'll walk you through the change step by step with a preview before anything happens.</div>
+        </div>
+    </div>
+
+    <!-- Setup Instructions -->
+    <div class="section">
+        <h2><span class="icon">&#128736;</span> Setup on Your Machine</h2>
+        <p class="subtitle">Get this running in your own Claude Code in under 2 minutes</p>
+
+        <div class="prompt-section">
+            <h3>Quick Setup (3 steps)</h3>
+            <div class="prompt-steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Make sure you have <strong>Claude Code</strong> installed (<code>claude</code> in your terminal). If not, install via <code>npm install -g @anthropic-ai/claude-code</code></div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Open Claude Code and paste the prompt below. Claude will create the skill file and install the required <code>pymssql</code> dependency automatically.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">After setup, type <code>/db-explorer</code> or say "connect to a database" in any future session to start exploring.</div>
+                </div>
+            </div>
+
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span>Copy &amp; paste this into Claude Code</span>
+                    <button class="copy-btn" onclick="copyPrompt(this)">Copy to clipboard</button>
+                </div>
+                <div class="copy-content" id="setup-prompt">Please set up the Silver Fern DB Explorer skill for me. Here's what I need:
+
+1. Create the skill file at `~/.claude/skills/db-explorer/SKILL.md` with the content below.
+2. Install the required Python dependency: `pip3 install --break-system-packages pymssql`
+3. Verify the install works by running: `python3 -c "import pymssql; print('pymssql OK')"`
+
+Here is the full SKILL.md content to write:
+
+---START SKILL FILE---
+&lt;db-explorer&gt;
+
+# Silver Fern Legacy Database Explorer
+
+A conversational database exploration skill for Silver Fern's legacy SQL Server databases (PRODUCE, RESTOCK, ANALYZE). Designed for non-technical team members to query customer databases using plain English.
+
+## Invocation
+
+User says: `/db-explorer` or "connect to a database" or "query a customer database"
+
+## Phase 1: Connection Setup (Interactive)
+
+Ask the user for three things. Be friendly and clear — many users are not technical:
+
+1. **Database hostname** — e.g., `cmg.silverfern.app`
+   - Prompt: "What's the database address? (e.g., cmg.silverfern.app)"
+2. **Username** — e.g., `client`
+   - Prompt: "What's the username? (usually 'client')"
+3. **Password**
+   - Prompt: "What's the password?"
+
+### Connection Code
+
+```python
+import pymssql
+conn = pymssql.connect(
+    server='{hostname}',
+    user='{username}',
+    password='{password}',
+    port=1433,
+    login_timeout=10
+)
+```
+
+If connection fails, provide a friendly error:
+- Timeout → "Can't reach that server. Double-check the address — it should look like `something.silverfern.app`"
+- Auth failure → "That username/password didn't work. Want to try again?"
+- Other → Show the error in plain English
+
+### On Successful Connection
+
+1. Run `SELECT name FROM sys.databases` to list available databases
+2. Show the user which databases are available (typically: Produce, Restock, Analyze, MobileApp)
+3. Say: "Connected! Here's what's available on this server. What would you like to explore?"
+
+## Phase 2: Exploration (Conversational)
+
+Once connected, the user can ask questions in plain English. Translate their questions to SQL, run them, and present results in a clean, readable format.
+
+### Database Schema Reference
+
+The databases follow this structure:
+
+#### PRODUCE (Greenhouse Production Planning)
+| Schema | Purpose | Key Tables |
+|--------|---------|------------|
+| `Setup` | Master data | `Customers`, `Categories`, `Catalogs` (plants: Genus/Series/Color), `Recipes`, `ProductionItems`, `Origins` |
+| `Plan` | Production planning | `Plans`, `Schedules` (grow schedules with WeekStart/WeekReady), `Lots`, `Recipes`, `MaterialEvents`, `SpaceEvents` |
+| `Materials` | Inventory &amp; purchasing | `Items`, `PurchaseOrders`, `PurchaseOrderDetails`, `ItemLocationQuantities`, `VendorItems` |
+| `Events` | Growing events | `EventSchedule`, `Tasks`, `Materials`, `Spaces`, `Triggers` |
+| `SpacePlanning` | Greenhouse space | `Plan`, `Specs`, `LocationSpace`, `SpaceTypes`, `JobRequirements` |
+| `COUNTc` | Physical counts | `Counts`, `CountSummaries`, `Devices` |
+| `Admin` | Users &amp; settings | `User`, `Role`, `Setting`, `AuditLog` |
+| `Config` | UI configuration | `Layouts`, `Reports`, `ColumnDefinitions` |
+| `dbo` | Shared | `Locations` (greenhouse locations with hierarchy), `Vendors` |
+
+**Key relationships in Produce:**
+- `Setup.Catalogs` → plant varieties (Genus + Series + Color)
+- `Setup.Categories` → pot sizes / container types
+- `Plan.Schedules` links Lots → Recipes → Locations with WeekStart/WeekReady dates
+- `Plan.Lots` → planned production quantities per catalog item
+- `Setup.Recipes` → grow instructions (GrowWeeks, PlantsPerPot, Yield)
+
+#### RESTOCK (Retail Replenishment / DBR)
+| Schema | Purpose | Key Tables |
+|--------|---------|------------|
+| `Config` | Customer &amp; site config | `Customers`, `Sites`, `DeliverySchedules`, `PriceGroup`, `Grade`, `TargetWOH`, `Slopes` |
+| `Product` | Item catalog | `Items`, `Groups`, `ItemPools`, `ConfigureUnits`, `Carriers`, `Blacklist` |
+| `dbo` | Core data | `Locations` (stores), `SalesData`, `Scenarios`, `Notes` |
+| `Import` | Data feeds | `Availability`, `InTransit`, `InventoryOnHand`, `SalesSTD`, `SalesTrailing` |
+| `Replenish` | Order generation | `Units`, `UnitDetails`, `Allocation`, `WriteOrders` |
+
+#### ANALYZE (Sales Analytics / Reporting)
+| Schema | Purpose | Key Tables |
+|--------|---------|------------|
+| `Data` | Transaction data | `DailySalesSummary`, `DailyTransactionSummaries`, `DailyInventoryStates`, `Order` |
+| `Generated` | Aggregated views | `DailySales`, `MarketDailySales`, `RegionDailySales` |
+| `Item` | Product master | `Item`, `ItemCost`, `Category`, `SizeCategory`, `Assortment`, `ItemGroup` |
+| `Retailer` | Store/retailer hierarchy | `Retailer`, `Region`, `Market`, `Location`, `GeoZone`, `PriceGroup` |
+| `Import` | Raw data feeds | `HomeDepotSales`, `HomeDepotInventory`, `WalmartSales`, `WalmartInventory`, `LowesSales`, `KrogerShips` |
+| `Config` | Reference | `Calendar`, `ShipFromSite` |
+
+### Query Guidelines
+
+1. **Always use `USE [DatabaseName]`** before querying
+2. **CRITICAL: Bracket ALL schema names** — `[Plan].Schedules`, `[Config].Settings`, etc. Several schema names are SQL reserved words. Always wrap in brackets.
+3. **Default to TOP 50** unless user asks for all results
+4. **Use schema-qualified names** (e.g., `Setup.Customers`, not just `Customers`)
+5. **For large tables**, always include WHERE clauses
+6. **pymssql is the driver** — Use `import pymssql` for connections.
+
+### Output Formatting
+
+- Present results as **clean markdown tables** (max 20 columns wide)
+- Round decimals to 2 places for money/percentages
+- Format dates as `MM/DD/YYYY`
+- Add commas to numbers: `786,592` not `786592`
+- For errors, translate to plain English — never show raw stack traces
+
+### Permission Modes
+
+The skill operates in three permission levels. **Default is Explorer (read-only).**
+
+#### Mode 1: Explorer (Default)
+- **SELECT only** — browsing, searching, counting, reporting
+- If user asks to change data: "You're in Explorer mode (read-only). Type `elevate` to request edit access."
+
+#### Mode 2: Editor (Type "elevate")
+- Allows **UPDATE** and **INSERT** on approved tables only
+- Every change goes through: preview affected rows → show exact SQL → type "confirm" → execute → verify
+- Major changes (5+ rows, sensitive tables) require Nathan's approval via Teams
+- **Never allows**: DROP, ALTER, TRUNCATE, or schema changes
+
+#### Mode 3: Admin (Nathan only)
+- Adds **DELETE** (single-row with WHERE clause)
+- Same preview → confirm flow, but no approval routing needed
+
+### Edit Safety Guardrails
+
+1. **MAX affected rows**: UPDATE affecting 10+ rows needs extra confirmation
+2. **No mass updates without WHERE**: Never run UPDATE without WHERE. Period.
+3. **Always use primary keys**: Prefer `WHERE ID = X` over name-based conditions
+4. **One change at a time**: Each goes through full preview → confirm flow
+5. **Log all writes**: Print a summary line after every write operation
+6. **No credential columns**: Never UPDATE passwords, hashes, or tokens
+
+### Quick Start Menu
+
+After connecting, present this menu:
+
+```
+Welcome! Here's what I can help you explore:
+
+PRODUCE DATABASE
+  1. Customers          — View customer list
+  2. Plant Varieties    — Browse catalogs (Genus/Series/Color)
+  3. Production Schedule — What's being grown and when
+  4. Recipes            — How plants are grown
+  5. Purchase Orders    — PO status and details
+  6. Inventory Counts   — Physical count history
+  7. Greenhouse Spaces  — Location and space planning
+
+RESTOCK DATABASE
+  8. Store Locations    — All retail stores
+  9. Sales Data         — Sales metrics by store and item
+  10. Product Items     — Item catalog
+  11. Replenishment     — Generated restock orders
+
+ANALYZE DATABASE
+  12. Daily Sales       — Sales summaries across retailers
+  13. Retailer Info     — Walmart, HD, Lowes, Kroger data
+  14. Item Catalog      — Items with costs and categories
+
+Just type a number, or ask me anything in plain English!
+```
+
+### Quick Commands
+
+- `menu` — Show the quick start menu
+- `tables` — List all tables in the current database
+- `columns [table]` — Show columns for a specific table
+- `count [table]` — Count rows in a table
+- `sample [table]` — Show 10 sample rows
+- `switch [database]` — Switch to a different database
+- `disconnect` — Close the connection
+- `elevate` — Request Editor mode
+- `read-only` — Drop back to Explorer mode
+- `mode` — Show current permission level
+
+### Known Customer Databases
+
+Servers follow the pattern `{customer-code}.silverfern.app`. Common:
+- CMG → `cmg.silverfern.app`
+
+### Dependency
+
+This skill requires `pymssql`:
+```bash
+pip3 install --break-system-packages pymssql
+```
+If the import fails, install it automatically and retry.
+
+&lt;/db-explorer&gt;
+---END SKILL FILE---
+
+After creating the file and installing pymssql, confirm it's ready to use.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="section">
+        <h2><span class="icon">&#10067;</span> FAQ</h2>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+                What databases can I connect to?
+                <span class="arrow">&#9654;</span>
+            </div>
+            <div class="faq-a">Any Silver Fern customer database server. The hostname follows the pattern <code>{customer-code}.silverfern.app</code>. Each server typically has Produce, Restock, Analyze, and MobileApp databases. Ask Nathan or your team lead for the credentials.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+                Can I accidentally break something?
+                <span class="arrow">&#9654;</span>
+            </div>
+            <div class="faq-a">By default you're in read-only Explorer mode — you literally cannot change any data. If you need to edit, you must explicitly escalate, and every change shows you exactly what will happen before it executes. Major changes require Nathan's approval via Teams.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+                Do I need to know SQL?
+                <span class="arrow">&#9654;</span>
+            </div>
+            <div class="faq-a">Nope. Just ask questions in plain English like "show me all customers" or "what's scheduled for week 20?" Claude handles the SQL translation. You can also use quick commands like <code>tables</code>, <code>sample [tablename]</code>, or <code>count [tablename]</code>.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+                Does this store my database password?
+                <span class="arrow">&#9654;</span>
+            </div>
+            <div class="faq-a">No. Credentials exist only in the current Claude Code session. When you close the terminal, they're gone. Nothing is written to disk.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+                What if pymssql won't install?
+                <span class="arrow">&#9654;</span>
+            </div>
+            <div class="faq-a">On most systems <code>pip3 install --break-system-packages pymssql</code> works. If you're on macOS, you may need <code>brew install freetds</code> first. On Windows/WSL it usually just works. Ask in the Product chat if you get stuck.</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Built by Silver Fern Product &middot; March 2026</p>
+        <p style="margin-top: 8px;">Questions? Ping Nathan in Teams or ask in the Product chat.</p>
+    </div>
+
+</div>
+
+<script>
+function copyPrompt(btn) {
+    const content = document.getElementById('setup-prompt').innerText;
+    navigator.clipboard.writeText(content).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = 'Copy to clipboard';
+            btn.classList.remove('copied');
+        }, 2000);
+    });
+}
+
+function toggleFaq(el) {
+    el.parentElement.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
